@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+"""
+SQX-Folder-Merge: Copy one copy of each uniquely-named file from source folders into a target folder.
+Comparison is case-sensitive. Files already in target are skipped.
+
+Usage:
+    python folder_merge.py <target_folder> <source_folder1> [source_folder2 ...]
+"""
+
+import sys
+import shutil
+from pathlib import Path
+
+
+def merge_folders(target: Path, sources: list[Path]) -> None:
+    target.mkdir(parents=True, exist_ok=True)
+
+    pre_existing: set[str] = {f.name for f in target.iterdir() if f.is_file()}
+    seen: set[str] = set(pre_existing)
+
+    if pre_existing:
+        print(f"  Target already contains {len(pre_existing)} file(s) — these will not be overwritten.\n")
+
+    copied = 0
+    skip_preexisting = 0
+    skip_duplicate = 0
+
+    for source in sources:
+        if not source.is_dir():
+            print(f"WARNING: source folder not found, skipping: {source}")
+            continue
+        for src_file in sorted(source.iterdir()):
+            if not src_file.is_file():
+                continue
+            name = src_file.name
+            if name in pre_existing:
+                print(f"  SKIP  {name}  (already in target before run)")
+                skip_preexisting += 1
+            elif name in seen:
+                print(f"  SKIP  {name}  (duplicate — already copied from an earlier source)")
+                skip_duplicate += 1
+            else:
+                shutil.copy2(src_file, target / name)
+                seen.add(name)
+                print(f"  COPY  {name}  <- {source.name}/")
+                copied += 1
+
+    print(f"\nDone.")
+    print(f"  Copied:                        {copied}")
+    print(f"  Skipped — pre-existing:        {skip_preexisting}")
+    print(f"  Skipped — duplicate in source: {skip_duplicate}")
+
+
+def main() -> None:
+    if len(sys.argv) < 3:
+        print("Usage: python folder_merge.py <target_folder> <source_folder1> [source_folder2 ...]")
+        sys.exit(1)
+
+    target = Path(sys.argv[1])
+    sources = [Path(p) for p in sys.argv[2:]]
+
+    print(f"Target : {target}")
+    print(f"Sources: {[str(s) for s in sources]}\n")
+
+    merge_folders(target, sources)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,3 @@
+SQX-Folder-Merge is this project and app name. 
+I need a script / app / python program that works on Mac and windows server. I  provide a target folder pathname and one or more source folder pathnames. the program reads all the files in the source folders ( and target folder ) It then copies one copy of file into the target folder so that the target folder only contains  one copy of each unique file name. If the file already exists in the target folder then the program skips to the next filename.        Example  Before : Source folders A to C contain files . Target folder D may contain files.    After run Target folder D has one copy of each unique file. Comparison is case sensitive. 
+See image /Volumes/Hub/ClaudeTree/FolderMerge/spec/multi2uniques-databanks-specV2.png
