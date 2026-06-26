@@ -14,8 +14,11 @@ from tkinter import filedialog, messagebox, scrolledtext
 def merge_folders(target: Path, sources: list[Path], log) -> None:
     target.mkdir(parents=True, exist_ok=True)
 
+    def visible(p: Path) -> bool:
+        return p.is_file() and not p.name.startswith(".")
+
     # Snapshot what is already in the target before we touch anything
-    pre_existing: set[str] = {f.name for f in target.iterdir() if f.is_file()}
+    pre_existing: set[str] = {f.name for f in target.iterdir() if visible(f)}
     seen: set[str] = set(pre_existing)
 
     if pre_existing:
@@ -30,7 +33,7 @@ def merge_folders(target: Path, sources: list[Path], log) -> None:
             log(f"WARNING: not found, skipping: {source}")
             continue
         for src_file in sorted(source.iterdir()):
-            if not src_file.is_file():
+            if not visible(src_file):
                 continue
             name = src_file.name
             if name in pre_existing:

@@ -15,7 +15,10 @@ from pathlib import Path
 def merge_folders(target: Path, sources: list[Path]) -> None:
     target.mkdir(parents=True, exist_ok=True)
 
-    pre_existing: set[str] = {f.name for f in target.iterdir() if f.is_file()}
+    def visible(p: Path) -> bool:
+        return p.is_file() and not p.name.startswith(".")
+
+    pre_existing: set[str] = {f.name for f in target.iterdir() if visible(f)}
     seen: set[str] = set(pre_existing)
 
     if pre_existing:
@@ -30,7 +33,7 @@ def merge_folders(target: Path, sources: list[Path]) -> None:
             print(f"WARNING: source folder not found, skipping: {source}")
             continue
         for src_file in sorted(source.iterdir()):
-            if not src_file.is_file():
+            if not visible(src_file):
                 continue
             name = src_file.name
             if name in pre_existing:
