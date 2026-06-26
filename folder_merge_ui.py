@@ -21,8 +21,16 @@ def merge_folders(target: Path, sources: list[Path], log) -> None:
     pre_existing: set[str] = {f.name for f in target.iterdir() if visible(f)}
     seen: set[str] = set(pre_existing)
 
-    if pre_existing:
-        log(f"  Target already contains {len(pre_existing)} file(s) — these will not be overwritten.\n")
+    # ── header ──
+    target_count = len(pre_existing)
+    log(f"  Target : {target}  ({target_count} file(s) already present)")
+    for src in sources:
+        if src.is_dir():
+            n = sum(1 for f in src.iterdir() if visible(f))
+            log(f"  Source : {src}  ({n} file(s))")
+        else:
+            log(f"  Source : {src}  (NOT FOUND)")
+    log("")
 
     # Case-insensitive lookup: maps lowered name → actual name already seen
     seen_lower: dict[str, str] = {n.lower(): n for n in pre_existing}
@@ -219,11 +227,6 @@ class App(tk.Tk):
         self._log.configure(state="normal")
         self._log.delete("1.0", "end")
         self._log.configure(state="disabled")
-
-        self._log_line(f"Target : {target_str}")
-        for s in sources:
-            self._log_line(f"Source : {s}")
-        self._log_line("")
 
         try:
             merge_folders(Path(target_str), sources, self._log_line)

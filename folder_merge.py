@@ -21,8 +21,14 @@ def merge_folders(target: Path, sources: list[Path]) -> None:
     pre_existing: set[str] = {f.name for f in target.iterdir() if visible(f)}
     seen: set[str] = set(pre_existing)
 
-    if pre_existing:
-        print(f"  Target already contains {len(pre_existing)} file(s) — these will not be overwritten.\n")
+    print(f"  Target : {target}  ({len(pre_existing)} file(s) already present)")
+    for src in sources:
+        if src.is_dir():
+            n = sum(1 for f in src.iterdir() if visible(f))
+            print(f"  Source : {src}  ({n} file(s))")
+        else:
+            print(f"  Source : {src}  (NOT FOUND)")
+    print("")
 
     seen_lower: dict[str, str] = {n.lower(): n for n in pre_existing}
 
@@ -74,9 +80,6 @@ def main() -> None:
 
     target = Path(sys.argv[1])
     sources = [Path(p) for p in sys.argv[2:]]
-
-    print(f"Target : {target}")
-    print(f"Sources: {[str(s) for s in sources]}\n")
 
     merge_folders(target, sources)
 
