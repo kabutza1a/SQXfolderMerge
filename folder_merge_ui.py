@@ -139,20 +139,20 @@ class App(tk.Tk):
         _browse_btn(target_frame, "Browse…", self._browse_target).pack(
             side="left", padx=4, pady=4)
 
-        # ── save log toggle + run button (same row) ──
+        # ── save log toggle + run button (same row, right-aligned) ──
         run_row = tk.Frame(self, bg=BG)
-        run_row.pack(pady=10)
+        run_row.pack(fill="x", padx=8, pady=10)
         self._save_log_var = tk.BooleanVar(value=False)
-        tk.Checkbutton(run_row, text="Save log to file", variable=self._save_log_var,
-                       bg=BG, fg=FG, selectcolor=SHERWOOD,
-                       activebackground=BG, activeforeground=FG,
-                       font=("", 11)).pack(side="left", padx=(0, 16))
         tk.Button(run_row, text="Run Merge",
                   bg=SHERWOOD, fg="#111111", activebackground=BTN_ACTIVE,
                   activeforeground="#111111", relief="flat",
                   highlightthickness=0, overrelief="flat",
                   font=("", 14, "bold"), padx=20, pady=8,
-                  command=self._run).pack(side="left")
+                  command=self._run).pack(side="right")
+        tk.Checkbutton(run_row, text="Save log to file", variable=self._save_log_var,
+                       bg=BG, fg=FG, selectcolor=SHERWOOD,
+                       activebackground=BG, activeforeground=FG,
+                       font=("", 11)).pack(side="right", padx=(0, 16))
 
         # ── log ──
         log_frame = tk.LabelFrame(self, text="Log", bg=BG_LABEL, fg=FG)
