@@ -24,8 +24,11 @@ def merge_folders(target: Path, sources: list[Path]) -> None:
     if pre_existing:
         print(f"  Target already contains {len(pre_existing)} file(s) — these will not be overwritten.\n")
 
+    seen_lower: dict[str, str] = {n.lower(): n for n in pre_existing}
+
     copied = 0
     skip_preexisting = 0
+    skip_preexisting_names: set[str] = set()
     skip_duplicate = 0
 
     for source in sources:
@@ -39,18 +42,28 @@ def merge_folders(target: Path, sources: list[Path]) -> None:
             if name in pre_existing:
                 print(f"  SKIP  {name}  (already in target before run)")
                 skip_preexisting += 1
+                skip_preexisting_names.add(name)
             elif name in seen:
                 print(f"  SKIP  {name}  (duplicate — already copied from an earlier source)")
                 skip_duplicate += 1
             else:
+                clash = seen_lower.get(name.lower())
+                if clash:
+                    print(f"  WARN  {name}  differs only by case from '{clash}' already in target"
+                          f" — on case-insensitive filesystems (macOS/Windows) this will overwrite it")
                 shutil.copy2(src_file, target / name)
                 seen.add(name)
+                seen_lower[name.lower()] = name
                 print(f"  COPY  {name}  <- {source.name}/")
                 copied += 1
 
+    pre_skip_detail = (f"{skip_preexisting} skips across "
+                       f"{len(skip_preexisting_names)} distinct file(s)"
+                       if skip_preexisting else "0")
+
     print(f"\nDone.")
     print(f"  Copied:                        {copied}")
-    print(f"  Skipped — pre-existing:        {skip_preexisting}")
+    print(f"  Skipped — pre-existing:        {pre_skip_detail}")
     print(f"  Skipped — duplicate in source: {skip_duplicate}")
 
 

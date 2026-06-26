@@ -24,9 +24,13 @@ def merge_folders(target: Path, sources: list[Path], log) -> None:
     if pre_existing:
         log(f"  Target already contains {len(pre_existing)} file(s) — these will not be overwritten.\n")
 
+    # Case-insensitive lookup: maps lowered name → actual name already seen
+    seen_lower: dict[str, str] = {n.lower(): n for n in pre_existing}
+
     copied = 0
-    skip_preexisting = 0   # was in target before this run
-    skip_duplicate = 0     # first seen in an earlier source during this run
+    skip_preexisting = 0        # skip events against pre-existing files
+    skip_preexisting_names: set[str] = set()   # distinct pre-existing names hit
+    skip_duplicate = 0          # duplicates across sources in this run
 
     for source in sources:
         if not source.is_dir():
@@ -39,18 +43,29 @@ def merge_folders(target: Path, sources: list[Path], log) -> None:
             if name in pre_existing:
                 log(f"  SKIP  {name}  (already in target before run)")
                 skip_preexisting += 1
+                skip_preexisting_names.add(name)
             elif name in seen:
                 log(f"  SKIP  {name}  (duplicate — already copied from an earlier source)")
                 skip_duplicate += 1
             else:
+                # Warn if a case-variant of this name is already seen
+                clash = seen_lower.get(name.lower())
+                if clash:
+                    log(f"  WARN  {name}  differs only by case from '{clash}' already in target"
+                        f" — on case-insensitive filesystems (macOS/Windows) this will overwrite it")
                 shutil.copy2(src_file, target / name)
                 seen.add(name)
+                seen_lower[name.lower()] = name
                 log(f"  COPY  {name}  ← {source.name}/")
                 copied += 1
 
+    pre_skip_detail = (f"{skip_preexisting} skips across "
+                       f"{len(skip_preexisting_names)} distinct file(s)"
+                       if skip_preexisting else "0")
+
     log(f"\nDone.")
     log(f"  Copied:                        {copied}")
-    log(f"  Skipped — pre-existing:        {skip_preexisting}")
+    log(f"  Skipped — pre-existing:        {pre_skip_detail}")
     log(f"  Skipped — duplicate in source: {skip_duplicate}")
 
 
