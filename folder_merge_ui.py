@@ -5,6 +5,7 @@ SQX-Folder-Merge UI
 
 import shutil
 import tkinter as tk
+from datetime import datetime
 from pathlib import Path
 from tkinter import filedialog, messagebox, scrolledtext
 
@@ -138,13 +139,20 @@ class App(tk.Tk):
         _browse_btn(target_frame, "Browse…", self._browse_target).pack(
             side="left", padx=4, pady=4)
 
-        # ── run button ──
-        tk.Button(self, text="Run Merge",
+        # ── save log toggle + run button (same row) ──
+        run_row = tk.Frame(self, bg=BG)
+        run_row.pack(pady=10)
+        self._save_log_var = tk.BooleanVar(value=False)
+        tk.Checkbutton(run_row, text="Save log to file", variable=self._save_log_var,
+                       bg=BG, fg=FG, selectcolor=SHERWOOD,
+                       activebackground=BG, activeforeground=FG,
+                       font=("", 11)).pack(side="left", padx=(0, 16))
+        tk.Button(run_row, text="Run Merge",
                   bg=SHERWOOD, fg="#111111", activebackground=BTN_ACTIVE,
                   activeforeground="#111111", relief="flat",
                   highlightthickness=0, overrelief="flat",
                   font=("", 14, "bold"), padx=20, pady=8,
-                  command=self._run).pack(pady=10)
+                  command=self._run).pack(side="left")
 
         # ── log ──
         log_frame = tk.LabelFrame(self, text="Log", bg=BG_LABEL, fg=FG)
@@ -232,6 +240,13 @@ class App(tk.Tk):
             merge_folders(Path(target_str), sources, self._log_line)
         except Exception as exc:
             messagebox.showerror("Error", str(exc))
+            return
+
+        if self._save_log_var.get():
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            log_path = Path.cwd() / f"log_{timestamp}.txt"
+            log_path.write_text(self._log.get("1.0", "end"))
+            self._log_line(f"\nLog saved to: {log_path}")
 
 
 if __name__ == "__main__":
